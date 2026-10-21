@@ -1,0 +1,63 @@
+name: Release announcement to Discord
+
+on:
+  workflow_call:
+    inputs:
+      repo-name:
+        description: Repository name shown in the announcement
+        type: string
+        required: false
+        default: ${{ github.repository }}
+      tag:
+        description: Release tag
+        type: string
+        required: true
+      release-url:
+        description: Release page URL (defaults to the tag's GitHub release page)
+        type: string
+        required: false
+      notes:
+        description: Release notes, truncated to 1000 characters
+        type: string
+        required: false
+      title:
+        description: Optional embed title
+        type: string
+        required: false
+    secrets:
+      webhook:
+        description: Discord releases channel webhook
+        required: true
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the public workflow repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: HaikeiLabs/github-workflows
+          ref: main
+          path: .release-discord-src
+          persist-credentials: false
+      - name: Render and send release announcement
+        continue-on-error: true
+        env:
+          REPO_NAME: ${{ inputs.repo-name }}
+          TAG: ${{ inputs.tag }}
+          RELEASE_URL: ${{ inputs.release-url }}
+          NOTES: ${{ inputs.notes }}
+          TITLE: ${{ inputs.title }}
+          DISCORD_WEBHOOK: ${{ secrets.webhook }}
+        shell: bash
+        run: |
+          echo "::add-mask::$DISCORD_WEBHOOK"
+          payload="$(.release-discord-src/.github/scripts/render-payload.sh)"
+          if ! curl --fail-with-body --silent --show-error --retry 2 --retry-all-errors \
+            --request POST \
+            --header 'Content-Type: application/json' \
+            --data "$payload" \
+            "$DISCORD_WEBHOOK"; then
+            echo '::warning::Discord release announcement failed after retries.'
+            exit 1
+          fi
