@@ -1,5 +1,8 @@
 # github-workflows
-Reusable GitHub Actions workflows shared across HaikeiLabs repos
+
+Reusable GitHub Actions workflows from [Haikei Labs](https://haikeilabs.com), shared across HaikeiLabs repos.
+
+[Docs](https://docs.haikeilabs.com) · [Discord](https://discord.gg/g6QaTYWXDa)
 
 ## Release announcements
 
